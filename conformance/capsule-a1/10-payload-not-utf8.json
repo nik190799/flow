@@ -1,0 +1,22 @@
+{
+ "name": "payload-not-utf8",
+ "about": "A signed payload that isn't UTF-8.",
+ "now": 1795046400000,
+ "steps": [
+  {
+   "op": "trust",
+   "doc": {
+    "flow": 1,
+    "type": "flow/keyring",
+    "payload": "e_99",
+    "sigs": [
+     {
+      "kid": "sha256:b6ab1512d89e9ad4b91141d415c8c618c496e06f0eea7d2279eb29e701443879",
+      "sig": "hQPOsk8ZTMGKaxjUMgPlzl7OQ2rxU1qvRCgLbSA2pSFkiOeL9BdT_JCAQYOf2su5ryuQ2VH8pHfVLhPF5xdhFA"
+     }
+    ]
+   },
+   "expect": "malformed"
+  }
+ ]
+}

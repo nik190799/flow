@@ -1,0 +1,22 @@
+{
+  "name": "flow-architecture",
+  "version": "0.1.0",
+  "description": "FLOW (Functions as Live Overlays, Without restart): the architecture on top of the Live Layer Protocol. Revision A1: signed envelope, trust policy with quantum-safe root keys, unknown-field rules.",
+  "type": "module",
+  "private": true,
+  "license": "Apache-2.0",
+  "engines": { "node": ">=22" },
+  "bin": { "flow": "bin/flow.mjs" },
+  "scripts": {
+    "test": "node test/unit.mjs && node test/wasm1.mjs && node test/proofs.mjs && node test/host.mjs && node test/offline.mjs && node conformance/run-js.mjs",
+    "test:go": "cd go && go vet ./... && go test ./... && go run ./cmd/flow-conformance ../conformance",
+    "conformance:gen": "node conformance/gen.mjs"
+  },
+  "dependencies": {
+    "@noble/post-quantum": "0.7.1",
+    "live-layer-protocol": "github:nik190799/live-layer-protocol#d14ebf9f8d17a45a3619231d4a9c63c00845bf96"
+  },
+  "devDependencies": {
+    "wabt": "1.0.37"
+  }
+}
