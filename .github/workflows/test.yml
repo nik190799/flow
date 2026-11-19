@@ -1,0 +1,20 @@
+name: test
+on: [push, pull_request]
+jobs:
+  js:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci
+      # The offline test runs the installer in a network namespace; allow unprivileged ones on this runner.
+      - run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+      - run: npm test
+  go:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version: "1.25" }
+      - run: cd go && go vet ./... && go test ./... && go run ./cmd/flow-conformance ../conformance
