@@ -10,3 +10,4 @@ npx asc $LLP/layers/tasks-as/app.ts -o tasks.wasm $FLAGS
 npx asc $LLP/layers/variants/tasks_v2.ts -o tasks_v2.wasm $FLAGS
 npx asc $LLP/layers/variants/snoop.ts -o snoop.wasm $FLAGS
 npx asc src/leak.ts -o leak.wasm $FLAGS
+for f in streak streak_v2 crash spoof share; do npx asc src/$f.ts -o $f.wasm $FLAGS; done

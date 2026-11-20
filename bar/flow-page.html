@@ -7,51 +7,33 @@
 } }</script>
 <body><div id="screen"></div><div style="height:3000px"></div>
 <script type="module">
-// A FLOW app in a real browser: the FLOW verifier and the LLP host both run in this page.
+// A FLOW app in a real browser: the FLOW verifier, the LLP host and FLOW's own page presenter all run here.
 import { FlowHost } from "/src/host.js";
+import { present } from "/src/present/dom.js";
 import { generateKey } from "/src/suites.js";
-import { keyringDoc, sealKeyring, sealRelease } from "/src/author.js";
+import { keyringDoc, sealKeyring, sealRelease, sealFunction } from "/src/author.js";
 import { sha256hex } from "/src/bytes.js";
 
-const screen = document.getElementById("screen");
-const text = (n) => n.k === "text" ? n.t : (n.c || []).map(text).join(" ");
-let host;
-// A plain renderer: each node kind becomes one element. Inputs are bound to host state.
-function node(slot, n) {
-  if (n.k === "text") return document.createTextNode(n.t);
-  const a = n.a || {};
-  let el;
-  if (n.k === "button" || n.k === "toggle") { el = document.createElement("button"); el.textContent = text(n); el.dataset.act = a.id; el.onclick = () => host.dispatch(slot, a.id); return el; }
-  if (n.k === "input") { el = document.createElement("input"); el.id = `in-${slot}-${a.bind}`; el.dataset.bind = a.bind; el.placeholder = a.placeholder || ""; el.value = host.kv.get(a.bind) ?? ""; el.oninput = () => host.llp.setBound(a.bind, el.value); return el; }
-  el = document.createElement(n.k === "heading" ? "h1" : "div");
-  for (const c of n.c || []) el.append(node(slot, c));
-  return el;
-}
-function onRender(slots) {
-  // What the person has typed belongs to the person: carry the focused input's live text, focus and caret
-  // across the rebuild. (Without the live text, a key pressed while a swap is in flight is lost, because
-  // LLP queues that write behind the swap and the rebuilt input would show the older stored value.)
-  const f = document.activeElement, keep = f?.dataset?.bind ? { id: f.id, s: f.selectionStart, e: f.selectionEnd, value: window.__noKeep ? null : f.value } : null;
-  const frag = document.createDocumentFragment();
-  for (const s of slots) if (s.tree) frag.append(node(s.slot, s.tree));
-  screen.replaceChildren(frag);
-  if (keep) { const el = document.getElementById(keep.id); if (el) { if (keep.value !== null) el.value = keep.value; el.focus(); el.setSelectionRange(keep.s, keep.e); } }
-  window.__renders = (window.__renders ?? 0) + 1;
-}
-
 const app = "demo.tasks";
-const [r1, rel, outsider] = await Promise.all([generateKey("p256"), generateKey("p256"), generateKey("p256")]);
+const [r1, rel, outsider, ana] = await Promise.all([1, 2, 3, 4].map(() => generateKey("p256")));
 const [q1, spare] = await Promise.all([generateKey("slh-dsa-sha2-128s"), generateKey("slh-dsa-sha2-128s")]);
 const keyring = await sealKeyring(keyringDoc({ keyring: 1, app, spare, roles: { root: [{ keys: [r1] }, { keys: [q1] }], release: [{ keys: [rel] }] } }), [r1, q1]);
 const blobs = new Map();
 const load = async (f) => { const b = new Uint8Array(await (await fetch("/layers/" + f)).arrayBuffer()); const h = sha256hex(b); blobs.set(h, b); return h; };
-const [v1, v2] = [await load("tasks.wasm"), await load("tasks_v2.wasm")];
-host = await FlowHost.create({ keyring, onRender });
-const release = (version, hash, signer = rel) => sealRelease({ app, manifest: { app, version, layers: { main: hash }, order: ["main"] } }, [signer]);
+const [v1, v2, streak, streak2] = await Promise.all(["tasks.wasm", "tasks_v2.wasm", "streak.wasm", "streak_v2.wasm"].map(load));
+const host = await FlowHost.create({ keyring });
+present(host, document.getElementById("screen"));
+const fetchBlob = async (h) => blobs.get(h);
+const release = (version, hash, signer = rel) => sealRelease({ app, manifest: { app, version, layers: { main: hash }, order: ["main"], keys: { main: { own: ["tasks.", "draft", "migrated."] } }, caps: { main: ["haptic"] } },
+  data: { "tasks.": "personal", "draft": "personal" }, capabilities: { haptic: { egress: false } }, core: ["main"], directions: { panel: { read: ["tasks."], caps: [], after: "main" } } }, [signer]);
 const pre = { v2: await release(2, v2), back: await release(3, v1), forged: await release(4, v1, outsider) };
+host.enrolPerson({ ...ana, name: "Ana" });
+const mine = { v1: await sealFunction({ app, direction: "panel", id: "streak", seq: 1, layer: streak, reads: ["tasks."] }, ana), v2: await sealFunction({ app, direction: "panel", id: "streak", seq: 2, layer: streak2 }, ana) };
 window.flow = {
-  first: await host.apply(await release(1, v1), async (h) => blobs.get(h)),
-  ship: (name) => host.apply(pre[name], async (h) => blobs.get(h)),
+  first: await host.apply(await release(1, v1), fetchBlob),
+  ship: (name) => host.apply(pre[name], fetchBlob),
+  mine: (name) => host.installFunction(mine[name], fetchBlob),
+  undoMine: () => host.undoFunction("fn.panel.streak"),
   ledger: () => host.ledger,
   version: () => host.version,
 };

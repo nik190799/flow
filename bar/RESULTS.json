@@ -131,7 +131,7 @@
    "line": 1,
    "subject": "FLOW today",
    "verdict": "pass",
-   "detail": "In Chromium a signed release swapped the running code in 14.5 ms while the person was mid-word. Field reads \"Buy milk today\", focus kept, tasks kept, scroll kept. One catch found on the way: with a plain renderer that rebuilds the field from stored state, a key pressed during the swap was lost in 4 of 6 runs; the app shell must carry the live text across, and this test's shell now does. That belongs in the host (step A2), not in each app. LLP's own web demo rebuilds fields the same plain way, so it likely loses keys too; that was read in its code, not run.",
+   "detail": "In Chromium a signed release swapped the running code in 14.1 ms while the person was mid-word. Field reads \"Buy milk today\", focus kept, tasks kept, scroll kept, in this run and in 8 of 8 more. The page is now drawn by FLOW's own presenter, which patches the page in place and reads typed text from the host, so the app author does nothing to get this. (With that host fix switched off, text was lost in 6 of 10 runs.)",
    "checks": [
     {
      "name": "change appears without a reload",
@@ -142,7 +142,11 @@
      "ok": true
     },
     {
-     "name": "focus and caret stay in the field",
+     "name": "focus and caret stay in the field, and it is the very same field (not a rebuilt copy)",
+     "ok": true
+    },
+    {
+     "name": "the same holds in 8 of 8 further runs",
      "ok": true
     },
     {
@@ -158,20 +162,36 @@
   {
    "line": 2,
    "subject": "FLOW today",
-   "verdict": "not built",
-   "detail": "A function signed by the person's own key is refused (untrusted), and there is no document kind for a personal function yet (wrong_type). What exists: the company can open a second spot, and a company release that changes the main app leaves the function in that spot running untouched (confirmed). The person-signed half is step B.",
+   "verdict": "pass",
+   "detail": "The company's release opens a spot called \"panel\" and says what a function there may read and use. Ana's device accepted a function signed by Ana's own key (2.9 ms, company code not restarted); Ben's device, on the same release, shows the plain app, and refuses Ana's function (untrusted). A company update reached both devices and Ana's function kept running. It stays the company's app: a function for a spot the company didn't open is refused (not_open), and when the company closed the spot the function was paused with its data kept, then came back when the spot reopened. Limit: a person's functions live on the device they were installed on; carrying them to the person's other devices is not built.",
    "checks": [
     {
-     "name": "a person's own function installs in a spot the company opened",
-     "ok": false
-    },
-    {
-     "name": "a company release leaves a function in another spot untouched",
+     "name": "the company declares where functions may go",
      "ok": true
     },
     {
-     "name": "the company declares where functions may go",
-     "ok": false
+     "name": "a person's own function installs there, signed by the person, with no company signature and no restart",
+     "ok": true
+    },
+    {
+     "name": "two people on the same release see different apps",
+     "ok": true
+    },
+    {
+     "name": "one person's function means nothing on another person's device",
+     "ok": true
+    },
+    {
+     "name": "a company update reaches both, and the person's function carries on untouched with its data",
+     "ok": true
+    },
+    {
+     "name": "the company can close the spot (function paused, data kept) and reopen it (function back)",
+     "ok": true
+    },
+    {
+     "name": "the same in a real browser, while the person is typing",
+     "ok": true
     }
    ]
   },
@@ -214,11 +234,15 @@
   {
    "line": 4,
    "subject": "FLOW today",
-   "verdict": "partial",
-   "detail": "Each accepted release is recorded on the device with the key that signed it. The company undid a release in the open app in 4 ms with data and typing kept, and a crashing release was reverted on its own. Not built: an undo the person triggers on the device, grants for AI agents, and a human-readable name behind a key.",
+   "verdict": "pass",
+   "detail": "Each accepted change is recorded on the device with the key that signed it, and for a person's or an agent's change, the person who answers for it by name. Undo works three ways: the company undid a release in the open app in 1.8 ms; a crashing release was reverted on its own; and the person undid their own update on the device in 1 ms, getting back both the old code and the old data although the update had rewritten the data's format. An agent could install a function only with a grant from Ana (alone: untrusted); when its code failed it was paused and Ana removed it; after ten minutes the grant was dead (expired). Limits: the company's keys are shown as key ids, not names; the record lives in memory and is not yet written to disk.",
    "checks": [
     {
      "name": "every accepted change is recorded with the key that signed it",
+     "ok": true
+    },
+    {
+     "name": "a person's change is recorded under the person's name",
      "ok": true
     },
     {
@@ -230,20 +254,32 @@
      "ok": true
     },
     {
-     "name": "the person can undo a change themselves on the device",
-     "ok": false
+     "name": "the person can undo their own change on the device: old code and old data back, even after the data's format changed",
+     "ok": true
     },
     {
-     "name": "an AI agent's change is tied to a time-limited grant from a person",
-     "ok": false
+     "name": "the same undo in a real browser, while the person is typing",
+     "ok": true
+    },
+    {
+     "name": "an AI agent's change is tied to a time-limited grant from a person, who is recorded as accountable",
+     "ok": true
+    },
+    {
+     "name": "the agent's function that fails is paused without harming the app, and the person can undo it",
+     "ok": true
+    },
+    {
+     "name": "after the grant's time limit the agent can change nothing",
+     "ok": true
     }
    ]
   },
   {
    "line": 5,
    "subject": "FLOW today",
-   "verdict": "partial",
-   "detail": "Access is enforced: a function saw none of the tasks or the secret note it hadn't declared, couldn't overwrite a task, and its undeclared network call was refused. The gap: a function that declares both \"read tasks\" and \"network\" installs, and the task text reached the network (confirmed). Data has no \"personal\" label yet, so the device can't refuse that combination. That is step B.",
+   "verdict": "pass",
+   "detail": "Access is enforced: a function saw none of the tasks or the secret note it hadn't declared, couldn't overwrite a task, and its undeclared network call was refused. The gap from last time is closed: the release now labels its data and says which capabilities leave the device, and a function that declared both \"read tasks\" and \"network\" was refused before any of its code ran (would_leak), while one that sends only public data worked. Limit, stated plainly: the device judges by what a function declares (which data, which capabilities), not by following each value through the code. A function allowed both personal data and a way out is trusted with it, which is why that case needs the company's ceiling and the person's yes.",
    "checks": [
     {
      "name": "a function can't read data it didn't declare",
@@ -258,8 +294,24 @@
      "ok": true
     },
     {
-     "name": "a function that would send personal data off the device is refused at install",
-     "ok": false
+     "name": "a person's function that would send personal data off the device is refused at install",
+     "ok": true
+    },
+    {
+     "name": "a company add-on that would do the same is refused too",
+     "ok": true
+    },
+    {
+     "name": "a function that sends only public data is allowed",
+     "ok": true
+    },
+    {
+     "name": "where the company allows personal data out, the person must still say yes on the device",
+     "ok": true
+    },
+    {
+     "name": "no personal data reached the network in any of this",
+     "ok": true
     }
    ]
   },
@@ -290,11 +342,11 @@
   {
    "line": 7,
    "subject": "FLOW today",
-   "verdict": "partial",
-   "detail": "One unchanged function was shown as a browser page, as terminal text, as a spoken description (\"Heading: Tasks. 0 of 1 done. Text field: Add a task…. Button…\") and as a list of 2 actions that an agent then used to add a task. It works because the function emits meaningful elements, not pixels. Not done: the element meanings aren't fixed in the spec yet, and these presenters are test code, not part of the host.",
+   "verdict": "pass",
+   "detail": "One unchanged function was shown as a browser page, as terminal text, as a spoken description (\"Heading: Tasks. 0 of 1 done. Text field: Add a task…. Button…\") and as a list of 2 actions that an agent then used to add a task. The meaning of each element (its role, its name, its state, its action) is now written in the spec and implemented once in the host; the four presenters ship with the host and all read that one table, and an element kind from a newer release still shows its contents on an older host. Limit: the element set is small (text, headings, fields, buttons, switches, groups); lists, images and navigation are not defined yet.",
    "checks": [
     {
-     "name": "screen (browser DOM)",
+     "name": "screen (browser page, drawn by FLOW's presenter)",
      "ok": true
     },
     {
@@ -310,8 +362,12 @@
      "ok": true
     },
     {
-     "name": "the meaning of each element is fixed in the spec (names, roles, heading levels)",
-     "ok": false
+     "name": "an agent can't do what isn't on screen, or write a field the action doesn't take",
+     "ok": true
+    },
+    {
+     "name": "all four surfaces read one table of element meanings, which is in the spec and ships with the host",
+     "ok": true
     }
    ]
   }

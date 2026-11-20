@@ -2,7 +2,7 @@
 
 **F**unctions as **L**ive **O**verlays, **W**ithout restart: an architecture on top of the [Live Layer Protocol](https://github.com/nik190799/live-layer-protocol) (LLP).
 
-LLP moves signed WebAssembly layers into a running app and swaps them without losing state. FLOW decides who may change what: an owner's core app, keyrings that say which keys may sign which documents, and later, people's own functions placed in spots the owner opened up. FLOW uses LLP as a library and doesn't fork or change it.
+LLP moves signed WebAssembly layers into a running app and swaps them without losing state. FLOW decides who may change what: the company's core app, keyrings that say which keys may sign which documents, and people's own functions placed in spots the company opened up. FLOW uses LLP as a library and doesn't fork or change it.
 
 ## Status: revision A1
 
@@ -18,13 +18,29 @@ A1 is the groundwork that is cheap now and expensive once devices are in the fie
 | WebAssembly 1.0 check | Layers must stay within the 2017 feature set, so old engines run them. |
 | Two verifiers | JavaScript (`src/`, wired to the LLP host) and Go (`go/`), checked against the same vectors. |
 
+## Status: revision B1
+
+B1 is what makes a FLOW app more than an app that updates itself. Spec: [SPEC-B1.md](SPEC-B1.md).
+
+| Part | What it does |
+|---|---|
+| Directions | The company's release names the spots where people's own functions may run, and what a function there may read and use. |
+| People's functions | A person enrolled on the device signs a function into a direction. The company signs nothing and sees nothing; its code is not restarted. Company updates leave the function running. |
+| Data labels | The release labels data public, personal or secret and says which capabilities leave the device. A function that could carry personal data out is refused before its code runs. |
+| Grants | A person lets an AI agent's key add functions for a limited time. The person is recorded as answering for them. |
+| Undo | The person undoes or removes their own (or their agent's) function on the device. Undo brings back the old code and the old data, even across a change of data format. |
+| Smooth swaps | The host carries typed text across a swap, and its page presenter patches the page in place, so focus, caret and text survive without the app author doing anything. |
+| Elements and presenters | The meaning of each view element is fixed in the spec. The host ships four presenters that read it: web page, terminal text, speech, and tools for an AI agent. |
+
+The reference app in `examples/workorders/` uses all of it: `npm run example`, then open the printed address.
+
 ## Try it
 
 Node 22 or later. Go 1.25 for the second verifier.
 
 ```sh
 npm install
-npm test            # unit, WebAssembly 1.0, proofs, LLP host, offline install, conformance (JS)
+npm test            # unit, WebAssembly 1.0, proofs, LLP host, functions, presenters, offline install, conformance (JS)
 npm run test:go     # the same conformance vectors through the Go verifier
 ```
 
@@ -46,6 +62,14 @@ import { FlowHost } from "./src/index.js";
 const host = await FlowHost.create({ keyring: firstKeyringEnvelope, onRender });
 await host.updateKeyring(nextKeyringEnvelope);   // { ok } or { ok: false, code, reason }
 await host.apply(releaseEnvelope, fetchBlob);    // FLOW checks trust, then LLP runs and swaps the layer
+
+host.enrolPerson({ suite, pub, name: "Ana" });           // on the device
+await host.installFunction(functionEnvelope, fetchBlob); // signed by Ana, or by an agent with her grant
+await host.undoFunction("fn.side.checklist");            // old code and old data back
+host.inspect();                                          // what runs, and under whose name
+
+import { present } from "./src/present/dom.js";
+present(host, document.getElementById("app"));           // draws the app and keeps it current
 ```
 
 ## What the tests prove
@@ -61,6 +85,9 @@ await host.apply(releaseEnvelope, fetchBlob);    // FLOW checks trust, then LLP 
 | The A1 vectors are frozen and locked by hash | P3.5, `conformance/capsule-a1/LOCK.json` |
 | FLOW releases run, swap with state kept, and roll forward on the unchanged LLP host | `test/host.mjs` |
 | Install from files inside a network namespace with no network | `test/offline.mjs` |
+| A person's function installs in an open direction without touching the company's code; fences, labels, grants, undo across a data-format change, pausing (51 checks) | `test/functions.mjs` |
+| Element meanings and the text, speech and agent presenters | `test/present.mjs` |
+| The reference app, driven in Chromium | `npm run example:test` |
 | The WebAssembly 1.0 check agrees with wabt (with every post-1.0 switch off) where wabt enforces the switch | `test/wasm1.mjs` |
 
 ## The bar
@@ -70,14 +97,24 @@ await host.apply(releaseEnvelope, fetchBlob);    // FLOW checks trust, then LLP 
 | # | Line | Web app | FLOW today |
 |---|---|---|---|
 | 1 | Changed while in use, nothing lost | fail | pass |
-| 2 | Each person's copy is different, and it stays the company's app | fail | not built |
+| 2 | Each person's copy is different, and it stays the company's app | fail | pass |
 | 3 | The device has the last word | fail | pass (installed host) |
-| 4 | Every change has a named signer and a working undo | fail | partial |
-| 5 | A function can only touch what it declared | fail | partial |
+| 4 | Every change has a named signer and a working undo | fail | pass |
+| 5 | A function can only touch what it declared | fail | pass |
 | 6 | It works with no network | fail | pass |
-| 7 | One function, many surfaces | partial | partial |
+| 7 | One function, many surfaces | partial | pass |
 
-The FLOW verifier has no Node-only code, so it runs in a browser page as well as in Node (`bar/flow-page.html`).
+Each line's limits are printed with its result. The main ones: line 3 holds for an installed host (when the checker is itself a web page, whoever serves the page can replace it); line 5 judges what a function declares, not each value it handles; line 2 is per device.
+
+The FLOW host has no Node-only code, so it runs in a browser page as well as in Node (`bar/flow-page.html`).
+
+## Known limits of B1
+
+- **JavaScript only.** The Go verifier and the frozen vectors cover A1. Functions, grants and labels have tests but no conformance vectors and no second implementation yet.
+- **Nothing is kept across a restart.** People, functions, grants and the record live in memory; storing them is the next piece.
+- **A person's functions stay on the device they were installed on.**
+- **The flow rule is declared, not traced.** See SPEC-B1 section 2.3.
+- **Small element set:** text, headings, fields, buttons, switches, groups.
 
 ## Known limits of A1
 
@@ -86,7 +123,7 @@ The FLOW verifier has no Node-only code, so it runs in a browser page as well as
 - **The LLP manifest inside a release stays strict** about unknown top-level fields (LLP v1 rule). The tolerance rule covers FLOW's own documents.
 - **Releases are signed with P-256.** Quantum-safe release signing (ML-DSA) waits for maintained libraries on both host platforms; the keyring can add it later through a normal policy change.
 - **The first keyring is parsed before it is verified,** because it carries its own keys. Pin it by hash at install.
-- Freshness notes, fleet hello authentication and the later document kinds (grants, overlays) are not built yet.
+- Freshness notes and fleet hello authentication are not built yet.
 - LLP's AssemblyScript layers are built with post-1.0 features by default (bulk memory), so a FLOW host refuses them unless rebuilt with the flags in `layers/build.sh`, or the host is created with `wasm: "any"`.
 
 ## Licence
