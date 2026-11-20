@@ -10,9 +10,11 @@
   "scripts": {
     "test": "node test/unit.mjs && node test/wasm1.mjs && node test/proofs.mjs && node test/host.mjs && node test/offline.mjs && node conformance/run-js.mjs",
     "test:go": "cd go && go vet ./... && go test ./... && go run ./cmd/flow-conformance ../conformance",
-    "conformance:gen": "node conformance/gen.mjs"
+    "conformance:gen": "node conformance/gen.mjs",
+    "bar": "node bar/run.mjs"
   },
   "dependencies": {
+    "@noble/hashes": "2.4.0",
     "@noble/post-quantum": "0.7.1",
     "live-layer-protocol": "github:nik190799/live-layer-protocol#d14ebf9f8d17a45a3619231d4a9c63c00845bf96"
   },

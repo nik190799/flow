@@ -8,3 +8,5 @@ LLP=../node_modules/live-layer-protocol
 FLAGS="-O3 --disable mutable-globals,sign-extension,nontrapping-f2i,bulk-memory"
 npx asc $LLP/layers/tasks-as/app.ts -o tasks.wasm $FLAGS
 npx asc $LLP/layers/variants/tasks_v2.ts -o tasks_v2.wasm $FLAGS
+npx asc $LLP/layers/variants/snoop.ts -o snoop.wasm $FLAGS
+npx asc src/leak.ts -o leak.wasm $FLAGS

@@ -5,11 +5,10 @@
 //                      uncompressed point. Signature: 64 bytes, r || s.
 //   slh-dsa-sha2-128s  SLH-DSA, FIPS 205, pure mode with an empty context. Quantum-safe, hash-based.
 //                      Public key 32 bytes, signature 7,856 bytes. Used for root keys.
-import { webcrypto } from "node:crypto";
 import { slh_dsa_sha2_128s } from "@noble/post-quantum/slh-dsa.js";
 import { te, concat, sha256hex, b64u } from "./bytes.js";
 
-const subtle = webcrypto.subtle;
+const subtle = globalThis.crypto.subtle;
 const P256 = { name: "ECDSA", namedCurve: "P-256" };
 const P256SIG = { name: "ECDSA", hash: "SHA-256" };
 

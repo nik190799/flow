@@ -63,6 +63,22 @@ await host.apply(releaseEnvelope, fetchBlob);    // FLOW checks trust, then LLP 
 | Install from files inside a network namespace with no network | `test/offline.mjs` |
 | The WebAssembly 1.0 check agrees with wabt (with every post-1.0 switch off) where wabt enforces the switch | `test/wasm1.mjs` |
 
+## The bar
+
+`npm run bar` runs seven checks an ordinary web app can't pass, against an ordinary web app (in Chromium) and against FLOW as it stands, and writes `bar/RESULTS.json`. It needs Playwright with Chromium installed, so it isn't part of `npm test`.
+
+| # | Line | Web app | FLOW today |
+|---|---|---|---|
+| 1 | Changed while in use, nothing lost | fail | pass |
+| 2 | Each person's copy is different, and it stays the company's app | fail | not built |
+| 3 | The device has the last word | fail | pass (installed host) |
+| 4 | Every change has a named signer and a working undo | fail | partial |
+| 5 | A function can only touch what it declared | fail | partial |
+| 6 | It works with no network | fail | pass |
+| 7 | One function, many surfaces | partial | partial |
+
+The FLOW verifier has no Node-only code, so it runs in a browser page as well as in Node (`bar/flow-page.html`).
+
 ## Known limits of A1
 
 - **The Go side is a verifier only.** It isn't wired into LLP's Go host yet. The JS side is wired into LLP's JS host through a bridge: FlowHost checks the FLOW signatures, then signs the manifest with a key that exists only in that process so LLP's own fail-closed signature check stays on. The bridge goes away if A1 moves into LLP itself.
