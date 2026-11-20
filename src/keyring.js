@@ -127,7 +127,8 @@ export async function nextKeyring(cur, env) {
 // expiry is not judged, and only signatures and rising numbers decide.
 export async function verifyRelease(kr, env, { clock = "trusted", now = Date.now() } = {}) {
   const u = unwrap(env, RELEASE);
-  const m = meets(kr.roles.release, await validSigners(u, lookupIn(kr)));
+  const valid = await validSigners(u, lookupIn(kr));
+  const m = meets(kr.roles.release, valid);
   if (!m.ok) refuse("untrusted", `release isn't signed under the release policy of keyring ${kr.keyring} (${m.short.join(", ")})`);
   const doc = parseStrict(u.payload, "release");
   checkRequires(doc, "release");
@@ -137,5 +138,7 @@ export async function verifyRelease(kr, env, { clock = "trusted", now = Date.now
     if (!Number.isSafeInteger(doc.expires)) refuse("malformed", "expires must be milliseconds since 1970");
     if (clock === "trusted" && now > doc.expires) refuse("expired", `release expired at ${new Date(doc.expires).toISOString()}`);
   }
-  return { app: doc.app, manifest: doc.manifest, expires: doc.expires ?? null };
+  // signers: the release-role keys that validly signed, so the device can always say who is accountable.
+  const releaseKids = new Set(kr.roles.release.flatMap((g) => g.keys));
+  return { app: doc.app, manifest: doc.manifest, expires: doc.expires ?? null, signers: [...valid.keys()].filter((k) => releaseKids.has(k)) };
 }

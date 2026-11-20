@@ -1,0 +1,319 @@
+{
+ "lines": [
+  "Changed while in use, nothing lost",
+  "Each person's copy is different, and it stays the company's app",
+  "The device has the last word",
+  "Every change has a named, accountable signer and a working undo",
+  "A function can only touch what it declared",
+  "It works with no network",
+  "One function, many surfaces"
+ ],
+ "web": [
+  {
+   "line": 1,
+   "subject": "web app",
+   "verdict": "fail",
+   "detail": "New version did not appear in the open page (still v1 after 1.5 s). After the reload that brings it: half-typed text lost, saved tasks kept.",
+   "checks": [
+    {
+     "name": "change appears without a reload",
+     "ok": false
+    },
+    {
+     "name": "half-typed text survives getting the change",
+     "ok": false
+    },
+    {
+     "name": "saved tasks survive",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "line": 2,
+   "subject": "web app",
+   "verdict": "fail",
+   "detail": "A user script starred 2 tasks on v1. After the company shipped v2 (it renamed one CSS class), it starred 0: the person's change broke silently. The company has no way to say where such changes may go.",
+   "checks": [
+    {
+     "name": "a person can change their own copy",
+     "ok": true
+    },
+    {
+     "name": "the change survives a company release",
+     "ok": false
+    },
+    {
+     "name": "the company declares where changes may go",
+     "ok": false
+    }
+   ]
+  },
+  {
+   "line": 3,
+   "subject": "web app",
+   "verdict": "fail",
+   "detail": "The server swapped the script for a hostile one. The browser ran it on the next load and it sent the person's tasks to the server. Nothing on the device checked it.",
+   "checks": [
+    {
+     "name": "code the server swapped in is refused",
+     "ok": false
+    }
+   ]
+  },
+  {
+   "line": 4,
+   "subject": "web app",
+   "verdict": "fail",
+   "detail": "Nothing in the page says who is accountable for the running code. After the company rolled back, the open page kept running v2 (confirmed), and the data v2 rewrote stayed rewritten (confirmed).",
+   "checks": [
+    {
+     "name": "the running code names its signer",
+     "ok": false
+    },
+    {
+     "name": "a rollback reaches the open app",
+     "ok": false
+    }
+   ]
+  },
+  {
+   "line": 5,
+   "subject": "web app",
+   "verdict": "fail",
+   "detail": "The user script declared nothing, read all of the app's stored data, and sent it off the device. The server received it: yes.",
+   "checks": [
+    {
+     "name": "added code can't read data it didn't declare",
+     "ok": false
+    },
+    {
+     "name": "added code can't send personal data off the device",
+     "ok": false
+    }
+   ]
+  },
+  {
+   "line": 6,
+   "subject": "web app",
+   "verdict": "fail",
+   "detail": "With the network off the app could not even load, and there is no way to hand it a new version from a file. (A service worker can cache the current version; it can't accept a new one offline.)",
+   "checks": [
+    {
+     "name": "a change can arrive without a network",
+     "ok": false
+    }
+   ]
+  },
+  {
+   "line": 7,
+   "subject": "web app",
+   "verdict": "partial",
+   "detail": "The browser gives a screen and, through its accessibility tree, a screen reader (button \"Add\" found by role: yes). There is no declared list of actions an AI agent can call; an agent has to guess from the page.",
+   "checks": [
+    {
+     "name": "screen",
+     "ok": true
+    },
+    {
+     "name": "read aloud",
+     "ok": true
+    },
+    {
+     "name": "usable by an agent through declared actions",
+     "ok": false
+    }
+   ]
+  }
+ ],
+ "flow": [
+  {
+   "line": 1,
+   "subject": "FLOW today",
+   "verdict": "pass",
+   "detail": "In Chromium a signed release swapped the running code in 14.5 ms while the person was mid-word. Field reads \"Buy milk today\", focus kept, tasks kept, scroll kept. One catch found on the way: with a plain renderer that rebuilds the field from stored state, a key pressed during the swap was lost in 4 of 6 runs; the app shell must carry the live text across, and this test's shell now does. That belongs in the host (step A2), not in each app. LLP's own web demo rebuilds fields the same plain way, so it likely loses keys too; that was read in its code, not run.",
+   "checks": [
+    {
+     "name": "change appears without a reload",
+     "ok": true
+    },
+    {
+     "name": "text typed before, during and after the swap is all there",
+     "ok": true
+    },
+    {
+     "name": "focus and caret stay in the field",
+     "ok": true
+    },
+    {
+     "name": "saved tasks survive",
+     "ok": true
+    },
+    {
+     "name": "scroll position survives a swap",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "line": 2,
+   "subject": "FLOW today",
+   "verdict": "not built",
+   "detail": "A function signed by the person's own key is refused (untrusted), and there is no document kind for a personal function yet (wrong_type). What exists: the company can open a second spot, and a company release that changes the main app leaves the function in that spot running untouched (confirmed). The person-signed half is step B.",
+   "checks": [
+    {
+     "name": "a person's own function installs in a spot the company opened",
+     "ok": false
+    },
+    {
+     "name": "a company release leaves a function in another spot untouched",
+     "ok": true
+    },
+    {
+     "name": "the company declares where functions may go",
+     "ok": false
+    }
+   ]
+  },
+  {
+   "line": 3,
+   "subject": "FLOW today",
+   "verdict": "pass",
+   "detail": "Acting as a hostile server we tried five ways to push code or trust: all refused on the device (untrusted, blob, untrusted, untrusted, stale), and the app kept running. Limit: this promise holds for an installed host. When the checker itself is a web page, whoever serves that page can replace the checker.",
+   "checks": [
+    {
+     "name": "a release signed by the relay's own key is refused",
+     "ok": true
+    },
+    {
+     "name": "a genuine release with a swapped layer file is refused",
+     "ok": true
+    },
+    {
+     "name": "a genuine release with edited contents is refused",
+     "ok": true
+    },
+    {
+     "name": "a new trust list pushed by the relay is refused",
+     "ok": true
+    },
+    {
+     "name": "an old genuine release replayed later is refused",
+     "ok": true
+    },
+    {
+     "name": "the app kept running the last good version throughout",
+     "ok": true
+    },
+    {
+     "name": "the same refusal happens in a real browser",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "line": 4,
+   "subject": "FLOW today",
+   "verdict": "partial",
+   "detail": "Each accepted release is recorded on the device with the key that signed it. The company undid a release in the open app in 4 ms with data and typing kept, and a crashing release was reverted on its own. Not built: an undo the person triggers on the device, grants for AI agents, and a human-readable name behind a key.",
+   "checks": [
+    {
+     "name": "every accepted change is recorded with the key that signed it",
+     "ok": true
+    },
+    {
+     "name": "the company can undo a release in the running app, data and typing kept",
+     "ok": true
+    },
+    {
+     "name": "a release that crashes is undone automatically",
+     "ok": true
+    },
+    {
+     "name": "the person can undo a change themselves on the device",
+     "ok": false
+    },
+    {
+     "name": "an AI agent's change is tied to a time-limited grant from a person",
+     "ok": false
+    }
+   ]
+  },
+  {
+   "line": 5,
+   "subject": "FLOW today",
+   "verdict": "partial",
+   "detail": "Access is enforced: a function saw none of the tasks or the secret note it hadn't declared, couldn't overwrite a task, and its undeclared network call was refused. The gap: a function that declares both \"read tasks\" and \"network\" installs, and the task text reached the network (confirmed). Data has no \"personal\" label yet, so the device can't refuse that combination. That is step B.",
+   "checks": [
+    {
+     "name": "a function can't read data it didn't declare",
+     "ok": true
+    },
+    {
+     "name": "a function can't write data it doesn't own",
+     "ok": true
+    },
+    {
+     "name": "a function can't use a capability it didn't declare",
+     "ok": true
+    },
+    {
+     "name": "a function that would send personal data off the device is refused at install",
+     "ok": false
+    }
+   ]
+  },
+  {
+   "line": 6,
+   "subject": "FLOW today",
+   "verdict": "pass",
+   "detail": "With the network removed (a connection attempt fails), a new trust list, a release and its code installed from a folder of files and the app rendered. A tampered file and an untrusted release in the folder were refused the same way as online.",
+   "checks": [
+    {
+     "name": "the child process has no network (a connection attempt fails)",
+     "ok": true
+    },
+    {
+     "name": "`flow install` applies a keyring change and a release from files alone, then renders",
+     "ok": true
+    },
+    {
+     "name": "a swapped layer file in the bundle is refused",
+     "ok": true
+    },
+    {
+     "name": "without the keyring change in the bundle, the release is refused (untrusted)",
+     "ok": true
+    }
+   ]
+  },
+  {
+   "line": 7,
+   "subject": "FLOW today",
+   "verdict": "partial",
+   "detail": "One unchanged function was shown as a browser page, as terminal text, as a spoken description (\"Heading: Tasks. 0 of 1 done. Text field: Add a task…. Button…\") and as a list of 2 actions that an agent then used to add a task. It works because the function emits meaningful elements, not pixels. Not done: the element meanings aren't fixed in the spec yet, and these presenters are test code, not part of the host.",
+   "checks": [
+    {
+     "name": "screen (browser DOM)",
+     "ok": true
+    },
+    {
+     "name": "terminal text",
+     "ok": true
+    },
+    {
+     "name": "read aloud",
+     "ok": true
+    },
+    {
+     "name": "an agent lists the actions and uses one",
+     "ok": true
+    },
+    {
+     "name": "the meaning of each element is fixed in the spec (names, roles, heading levels)",
+     "ok": false
+    }
+   ]
+  }
+ ]
+}

@@ -27,6 +27,7 @@ const host = await FlowHost.create({ keyring: k1, onRender: (t) => { screen = t.
 let r = await host.apply(await release(1, tasks), fetchBlob);
 check("H1 a FLOW release runs on the unchanged LLP host", r.ok && screen.includes("Tasks"), screen.slice(0, 60));
 host.llp.setBound("draft", "keep me"); await host.dispatch("main", "add");
+check("H1b the result and the device's ledger name the key that signed the release", r.signers?.length === 1 && r.signers[0] === rel.kid && host.ledger[0].signers[0] === rel.kid && host.ledger[0].version === 1);
 check("H2 the app works: a task is added through the layer", host.kv.get("tasks.n") === 1);
 
 r = await host.apply(await release(2, tasksV2), fetchBlob);

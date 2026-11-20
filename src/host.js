@@ -40,6 +40,7 @@ export class FlowHost {
     this.bridgeKey = bridgeKey;
     this.opts = opts;
     this.refusals = [];
+    this.ledger = []; // every accepted release: version, keyring number, who signed, which layers
   }
 
   refused(e) {
@@ -76,7 +77,8 @@ export class FlowHost {
     const sig = await signManifest(rel.manifest, this.bridgeKey);
     const r = await this.llp.apply(rel.manifest, sig, fetch);
     if (!r.ok && tooNew) return this.refused(new FlowError("not_wasm_1", tooNew));
-    return r;
+    if (r.ok) this.ledger.push({ version: rel.manifest.version, keyring: this.keyring.keyring, signers: rel.signers, layers: { ...rel.manifest.layers } });
+    return r.ok ? { ...r, signers: rel.signers } : r;
   }
 
   render() { return this.llp.render(); }
