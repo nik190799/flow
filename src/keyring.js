@@ -140,5 +140,5 @@ export async function verifyRelease(kr, env, { clock = "trusted", now = Date.now
   }
   // signers: the release-role keys that validly signed, so the device can always say who is accountable.
   const releaseKids = new Set(kr.roles.release.flatMap((g) => g.keys));
-  return { app: doc.app, manifest: doc.manifest, expires: doc.expires ?? null, signers: [...valid.keys()].filter((k) => releaseKids.has(k)) };
+  return { app: doc.app, manifest: doc.manifest, doc, expires: doc.expires ?? null, signers: [...valid.keys()].filter((k) => releaseKids.has(k)) };
 }

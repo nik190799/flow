@@ -1,0 +1,142 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Work orders — a FLOW reference app</title>
+<script type="importmap">{ "imports": {
+  "live-layer-protocol/": "/node_modules/live-layer-protocol/",
+  "@noble/post-quantum/": "/node_modules/@noble/post-quantum/",
+  "@noble/hashes/": "/node_modules/@noble/hashes/",
+  "@noble/curves/": "/node_modules/@noble/curves/"
+} }</script>
+<style>
+  :root { --ink:#16202a; --soft:#5b6b7a; --line:#d6dde4; --bg:#f4f6f8; --panel:#fff; --accent:#0b5cad; --ok:#1a7f4b; --no:#b3261e; font: 15px/1.45 system-ui, sans-serif; color: var(--ink); }
+  body { margin:0; background:var(--bg); }
+  header { padding:14px 20px; border-bottom:1px solid var(--line); background:var(--panel); }
+  header b { font-size:16px; } header span { color:var(--soft); margin-left:10px; }
+  main { display:grid; grid-template-columns:minmax(300px,1fr) minmax(320px,1fr); gap:20px; padding:20px; max-width:1180px; margin:0 auto; }
+  @media (max-width:800px) { main { grid-template-columns:1fr; } }
+  h2 { font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--soft); margin:0 0 8px; }
+  .box { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:16px; margin-bottom:16px; }
+  /* The app itself: every element below is drawn by FLOW's presenter from what the layers declare. */
+  #app section + section { margin-top:14px; padding-top:14px; border-top:1px dashed var(--line); }
+  #app h1 { font-size:19px; margin:0 0 4px; } #app p { margin:2px 0; color:var(--soft); }
+  #app [data-layout=col], #app [data-layout=card] { display:flex; flex-direction:column; gap:6px; }
+  #app [data-layout=row] { display:flex; gap:8px; margin-top:6px; }
+  #app input { flex:1; padding:7px 9px; border:1px solid var(--line); border-radius:6px; font:inherit; }
+  button { font:inherit; padding:7px 12px; border:1px solid var(--line); border-radius:6px; background:#fff; cursor:pointer; }
+  button:hover { border-color:var(--accent); }
+  #app [role=switch] { text-align:left; } #app [role=switch]::before { content:"☐  "; } #app [role=switch][aria-checked=true]::before { content:"☑  "; }
+  #app [role=switch][aria-checked=true] { color:var(--soft); text-decoration:line-through; }
+  .steps button { display:block; width:100%; text-align:left; margin-bottom:6px; }
+  .steps small { color:var(--soft); display:block; }
+  #say { min-height:1.4em; font-weight:600; } #say.no { color:var(--no); } #say.ok { color:var(--ok); }
+  table { width:100%; border-collapse:collapse; font-size:13px; } td, th { text-align:left; padding:5px 6px; border-top:1px solid var(--line); vertical-align:top; }
+  th { color:var(--soft); font-weight:500; border-top:0; } code { font:12px ui-monospace, monospace; color:var(--soft); }
+  .paused { color:var(--no); }
+</style>
+<body>
+<header><b>Work orders</b><span>A FLOW reference app. The company's app, a technician's own function, an AI agent's function, all on one device.</span></header>
+<main>
+  <div>
+    <h2>The app on Ana's device</h2>
+    <div class="box" id="app"></div>
+    <h2>What is running, and under whose name</h2>
+    <div class="box"><table id="running"></table></div>
+  </div>
+  <div>
+    <h2>Try it</h2>
+    <div class="box steps">
+      <p id="say">Type in any field, then press a button below. Nothing you typed is lost.</p>
+      <button id="b-company">Company ships release 2<small>Signed by the company's release key. Swaps the app's code while it is open.</small></button>
+      <button id="b-mine">Ana adds her own function<small>"My van checklist", signed by Ana's key, in the spot the company opened.</small></button>
+      <button id="b-mine2">Ana updates her function<small>Version 2 stores her list in a new form.</small></button>
+      <button id="b-agent">Ana lets an AI agent add a function for 10 minutes<small>The agent signs "Next up" with its own key and Ana's grant.</small></button>
+      <button id="b-leak">Someone tries to add "Export my jobs"<small>It reads customer addresses and asks for the upload capability.</small></button>
+      <button id="b-forged">A stranger pushes a release<small>Signed by a key the device was never told to trust.</small></button>
+    </div>
+    <h2>The device's record</h2>
+    <div class="box"><table id="ledger"></table></div>
+  </div>
+</main>
+<script type="module">
+import { FlowHost } from "/src/host.js";
+import { present } from "/src/present/dom.js";
+import { generateKey } from "/src/suites.js";
+import { keyringDoc, sealKeyring, sealRelease, sealFunction, sealGrant } from "/src/author.js";
+import { sha256hex } from "/src/bytes.js";
+
+// In a real deployment the company's keys never leave the company, Ana's key lives in her device's
+// secure store, and the agent runs elsewhere. This page plays all the parts so you can press the buttons.
+const app = "example.workorders";
+const [root, release, stranger, ana, agent] = await Promise.all([1, 2, 3, 4, 5].map(() => generateKey("p256")));
+const [rootQ, spare] = await Promise.all([1, 2].map(() => generateKey("slh-dsa-sha2-128s")));
+const keyring = await sealKeyring(keyringDoc({ keyring: 1, app, spare, roles: { root: [{ keys: [root] }, { keys: [rootQ] }], release: [{ keys: [release] }] } }), [root, rootQ]);
+
+const blobs = new Map(), H = {};
+for (const f of ["app", "app_v2", "checklist", "checklist_v2", "digest", "exporter"]) {
+  const b = new Uint8Array(await (await fetch(`/examples/workorders/layers/${f}.wasm`)).arrayBuffer());
+  H[f] = sha256hex(b); blobs.set(H[f], b);
+}
+const fetchBlob = async (h) => blobs.get(h);
+
+// What the company signs: its code, which data is personal, which capabilities leave the device,
+// and one open direction ("side") with what a function there may read and use.
+const companyRelease = (version, layer, signer = release) => sealRelease({
+  app,
+  manifest: { app, version, layers: { main: layer }, order: ["main"], keys: { main: { own: ["jobs.", "draft"] } }, caps: { main: [] } },
+  data: { "jobs.": "personal", "draft": "personal" },
+  capabilities: { upload: { egress: true }, haptic: { egress: false } },
+  core: ["main"],
+  directions: { side: { read: ["jobs."], caps: ["upload", "haptic"], egress: "public", max: 4, after: "main" } },
+}, [signer]);
+
+const host = await FlowHost.create({ keyring, capabilities: { upload: async () => {}, haptic: async () => {} } });
+const names = new Map([[release.kid, "Company release key"], [agent.kid, "AI agent"], [stranger.kid, "Stranger"]]);
+const who = (kid) => names.get(kid) ?? host.people.get(kid)?.name ?? kid.slice(7, 15);
+present(host, document.getElementById("app"));
+const page = host.onRender;
+host.onRender = (t) => { page(t); panels(); };
+
+// The jobs come from the company's backend; here they are put in place by hand.
+[["Replace intake filter", "Unit 4, Harbour St"], ["Boiler service", "12 Mill Lane"], ["Check pressure valve", "Dock 2"]].forEach(([title, site], i) => { host.kv.set(`jobs.${i}.title`, title); host.kv.set(`jobs.${i}.site`, site); host.kv.set(`jobs.${i}.done`, 0); });
+host.kv.set("jobs.n", 3);
+await host.apply(await companyRelease(1, H.app), fetchBlob);
+names.set(host.enrolPerson({ ...ana, name: "Ana" }), "Ana");
+
+const say = (r, yes) => { const el = document.getElementById("say"); el.className = r.ok ? "ok" : "no"; el.textContent = r.ok ? yes : `Refused on the device (${r.code}): ${r.reason}`; panels(); return r; };
+const fn = (id, seq, layer, more = {}) => ({ app, direction: "side", id, seq, layer, ...more });
+let seq = 0, grant = null;
+const steps = {
+  company: async () => say(await host.apply(await companyRelease(host.version + 1, host.running().main === H.app ? H.app_v2 : H.app), fetchBlob), "The company's release is live. Your typing and Ana's function were not disturbed."),
+  mine: async () => say(await host.installFunction(await sealFunction(fn("checklist", ++seq, H.checklist, { reads: ["jobs."], intent: "My own packing list next to the jobs" }), ana), fetchBlob), "Ana's function is running. The company signed nothing and saw nothing."),
+  mine2: async () => say(await host.installFunction(await sealFunction(fn("checklist", ++seq, H.checklist_v2, { reads: ["jobs."], intent: "Count what is packed" }), ana), fetchBlob), "Ana's function is updated. Use Undo below to get the old one back, with its old data."),
+  agent: async () => {
+    grant = await sealGrant({ app, agent, directions: ["side"], notAfter: Date.now() + 600_000, caps: [] }, ana);
+    return say(await host.installFunction(await sealFunction(fn("next-up", ++seq, H.digest, { reads: ["jobs."], intent: "Show the next open job" }), agent, grant), fetchBlob), "The agent's function is running under Ana's 10-minute grant. Ana answers for it and can undo it.");
+  },
+  leak: async () => say(await host.installFunction(await sealFunction(fn("export", ++seq, H.exporter, { reads: ["jobs."], caps: ["upload"] }), ana), fetchBlob), "Installed."),
+  forged: async () => say(await host.apply(await companyRelease(host.version + 1, H.app_v2, stranger), fetchBlob), "Accepted."),
+};
+for (const [k, f] of Object.entries(steps)) document.getElementById(`b-${k}`).onclick = f;
+
+function panels() {
+  const cell = (t, cls) => { const td = document.createElement("td"); if (cls) td.className = cls; td.append(t); return td; };
+  const row = (...cells) => { const tr = document.createElement("tr"); tr.append(...cells); return tr; };
+  const head = (...h) => { const tr = document.createElement("tr"); for (const t of h) { const th = document.createElement("th"); th.textContent = t; tr.append(th); } return tr; };
+  const act = (label, f) => { const b = document.createElement("button"); b.textContent = label; b.onclick = async () => say(await f(), `${label}: done.`); return b; };
+  const ins = host.inspect(), running = document.getElementById("running"), rows = [head("What", "Answers for it", "May read", "May use", "")];
+  if (ins.release) rows.push(row(cell(`The company's app, release ${ins.release.version}`), cell(who(ins.release.signers[0])), cell("its own data"), cell("—"), cell("")));
+  for (const f of ins.functions) {
+    const tools = document.createElement("span");
+    tools.append(act("Undo", () => host.undoFunction(f.slot)), " ", act("Remove", () => host.removeFunction(f.slot)));
+    rows.push(row(cell(`${f.id} (version ${f.versions})${f.state === "paused" ? " — paused: " + f.paused.reason : ""}`, f.state === "paused" ? "paused" : ""),
+      cell(f.grant ? `Ana, through her grant to the AI agent` : who(f.person.kid)), cell(f.reads.join(", ") || "nothing"), cell(f.caps.join(", ") || "nothing"), cell(tools)));
+  }
+  running.replaceChildren(...rows);
+  const kinds = { release: (e) => `Company release ${e.version}`, function: (e) => `Function ${e.slot.split(".").pop()} installed (seq ${e.seq})`, undo: (e) => `Undo of ${e.slot.split(".").pop()}`, remove: (e) => `Removed ${e.slot.split(".").pop()}`, enrol: (e) => `${e.person.name} enrolled on this device`, paused: (e) => `${e.slot.split(".").pop()} paused`, resumed: (e) => `${e.slot.split(".").pop()} resumed`, revoke: () => "Grant revoked" };
+  const lrows = [head("Change", "Signed by", "Accountable")];
+  for (const e of [...host.ledger].reverse().slice(0, 12)) lrows.push(row(cell(kinds[e.kind]?.(e) ?? e.kind), cell(e.signers ? who(e.signers[0]) : "on the device"), cell(e.kind === "release" ? "The company" : e.person?.name ?? "")));
+  document.getElementById("ledger").replaceChildren(...lrows);
+}
+panels();
+window.__host = host; window.__ready = true;
+</script>
+</body></html>

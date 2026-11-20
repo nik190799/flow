@@ -5,3 +5,8 @@ export { KEYRING, RELEASE, FEATURES, readKeyring, trustFirstKeyring, nextKeyring
 export { wasm1Problem } from "./wasm1.js";
 export { FlowHost } from "./host.js";
 export { installBundle, writeBundle } from "./bundle.js";
+export { FUNCTION, GRANT, readPolicy, labelOf, flowOf, fits, verifyFunction, verifyGrant, slotOf } from "./functions.js";
+export { meaning, items, textOf } from "./present/meaning.js";
+export { asText } from "./present/text.js";
+export { asSpeech } from "./present/speech.js";
+export { asTools } from "./present/tools.js";

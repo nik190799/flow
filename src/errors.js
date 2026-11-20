@@ -9,6 +9,12 @@ export const CODES = Object.freeze([
   "wrong_app",      // signed for another app
   "expired",        // past its expiry, on a device whose clock is trusted
   "not_wasm_1",     // a layer that uses WebAssembly features beyond the 1.0 feature set
+  "not_open",       // a function for a direction the company hasn't opened, or one that is full
+  "exceeds_direction", // a function that asks for data or capabilities its direction doesn't offer
+  "would_leak",     // a function (or non-core slot) that could carry labelled data off the device, above the allowed ceiling
+  "needs_consent",  // allowed by the direction, but the person hasn't agreed to this data leaving the device
+  "bad_version",    // a release whose version or epoch is unusable
+  "layer_failed",   // the code failed its health check on real state; nothing changed
 ]);
 
 export class FlowError extends Error {
