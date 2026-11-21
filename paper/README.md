@@ -1,7 +1,7 @@
 # FLOW research paper
 
 `flow.tex` is the paper on FLOW (Functions as Live Overlays, Without restart); `flow.pdf` is the built copy.
-Zenodo DOI (reserved): 10.5281/zenodo.24411135.
+Published on Zenodo: [doi:10.5281/zenodo.24411135](https://doi.org/10.5281/zenodo.24411135).
 
 ## Build
 
