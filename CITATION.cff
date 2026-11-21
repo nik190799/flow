@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use FLOW, please cite it as below."
+title: "FLOW: Functions as Live Overlays, Without restart"
+type: software
+authors:
+  - family-names: Kadalge
+    given-names: Nikhil Ajay
+    orcid: "https://orcid.org/0009-0004-8859-5607"
+license: Apache-2.0
+repository-code: "https://github.com/nik190799/flow"
+keywords:
+  - live update
+  - WebAssembly
+  - code signing
+  - end-user programming
+  - software architecture
+references:
+  - type: article
+    title: "Live Layer Protocol: Streaming Signed, Verified WebAssembly Layers into Running Applications"
+    authors:
+      - family-names: Kadalge
+        given-names: Nikhil Ajay
+    year: 2026
+    doi: "10.5281/zenodo.24349382"
