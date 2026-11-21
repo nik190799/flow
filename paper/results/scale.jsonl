@@ -1,0 +1,4 @@
+{"functions":1,"install_first_ms":3.9,"install_median_ms":3.9,"install_last_ms":3.9,"release_with_all_running_ms":26.4,"functions_still_running_after_release":1,"undo_ms":1.1,"undo_ok":true,"render_ms":0.3,"rss_mb":80}
+{"functions":10,"install_first_ms":3.2,"install_median_ms":25.4,"install_last_ms":27.6,"release_with_all_running_ms":4.1,"functions_still_running_after_release":10,"undo_ms":1.7,"undo_ok":true,"render_ms":0.8,"rss_mb":188}
+{"functions":50,"install_first_ms":3.1,"install_median_ms":18.3,"install_last_ms":18.3,"release_with_all_running_ms":14.7,"functions_still_running_after_release":50,"undo_ms":4.5,"undo_ok":true,"render_ms":2.9,"rss_mb":619}
+{"functions":200,"install_first_ms":3.4,"install_median_ms":19.6,"install_last_ms":32.6,"release_with_all_running_ms":14.7,"functions_still_running_after_release":200,"undo_ms":10.9,"undo_ok":true,"render_ms":7.1,"rss_mb":2284}

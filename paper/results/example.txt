@@ -1,0 +1,16 @@
+
+> flow-architecture@0.1.0 example:test
+> node examples/workorders/test.mjs
+
+PASS  E1 the company's app shows the jobs
+PASS  E2 Ana's own function appears beside the company's app, and what she was typing is still there  — field reads "Inspect roof fan", app: Work orders1 of 3 finishedReplace intake filter · Unit 4, Harbour StBoiler service · 12 Mill LaneCheck pressure valve · Dock 2AddMy van checklistBefore leaving 
+PASS  E3 the company ships release 2 while Ana types in HER function: the app changes, her text and her list don't  — The company's release is live. Your typing and Ana's function were not disturbed.
+PASS  E4 Ana updates her function; it converts her list to its new form
+PASS  E5 Ana presses Undo: the old function is back with the old list, tick included, although version 2 had rewritten and then unticked it
+PASS  E6 an AI agent adds a function under Ana's ten-minute grant, and the device shows Ana answers for it
+PASS  E7 a function that would upload customer addresses is refused before it runs  — Refused on the device (would_leak): it reads personal data and uses upload, which leaves the device; side allows only public data to leave
+PASS  E8 a release signed by a stranger is refused; the app carries on
+PASS  E9 the device's record names who signed and who answers for each change
+PASS  E10 no script errors on the page
+
+example: 10/10 passed

@@ -1,0 +1,86 @@
+PASS  C1 the company's calculator (release 1) runs  — 28.8 ms
+PASS  C2 its own primitives work: 3 0 shows 30
+PASS  C3 its sin works in radians, as the company built it  — sin(30 rad) = -0.988032
+PASS  C4 Ana's own function installs beside the calculator, with no company signature and no restart  — 4.4 ms
+PASS  C5 it reads the calculator's number and draws its own UI: sin 30° = 0.5
+
+--- screen after Ana's degrees function ---
+30
+ 
+[ 7 ]
+[ 8 ]
+[ 9 ]
+[ ÷ ]
+[ 4 ]
+[ 5 ]
+[ 6 ]
+[ × ]
+[ 1 ]
+[ 2 ]
+[ 3 ]
+[ − ]
+[ 0 ]
+[ C ]
+[ = ]
+[ + ]
+[ sin ]
+[ cos ]
+
+In degrees: x = 30°
+sin 30° = 0.5
+cos 30° = 0.866025
+Kept: 0
+[ Keep this ]
+
+PASS  C6 the agent's function installs under Ana's grant; the device records Ana as answering for it  — 28.3 ms
+PASS  C7 an agent (or a person) uses the new UI through the same declared actions: 120 between 4 with tip is 34.5 each  — go(How many people), tip
+
+--- the split function, read aloud ---
+Split 120 + 15% tip between 4. Each pays 34.5. Text field: How many people, contains 4. Button: Split. Switch, on: Add 15% tip.
+
+PASS  C8 a function asking for the network is refused: this direction offers no way out  — exceeds_direction: fx doesn't offer the net capability
+PASS  C9 the company's release 2 lands; both people's functions keep running, untouched  — 3.9 ms
+PASS  C10 the new primitive works and the functions follow the number: √144 = 12, 12 between 4 with tip is 3.45
+
+--- screen after the company's release 2 ---
+12
+ 
+[ 7 ]
+[ 8 ]
+[ 9 ]
+[ ÷ ]
+[ 4 ]
+[ 5 ]
+[ 6 ]
+[ × ]
+[ 1 ]
+[ 2 ]
+[ 3 ]
+[ − ]
+[ 0 ]
+[ C ]
+[ = ]
+[ + ]
+[ sin ]
+[ cos ]
+[ √ ]
+[ % ]
+
+In degrees: x = 12°
+sin 12° = 0.207912
+cos 12° = 0.978148
+Kept: 0
+[ Keep this ]
+
+Split 12 + 15% tip between 4
+Each pays 3.45
+<4>
+[ Split ]
+[x] Add 15% tip
+
+PASS  C11 Ana undoes the agent's function on the device; it and its data are gone, the calculator untouched  — 1.2 ms
+PASS  C12 after ten minutes the agent can change nothing
+
+record: release; enrol by Ana; function by Ana; function by Ana (agent under grant); release; undo by Ana
+
+calculator: 12/12 passed

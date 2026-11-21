@@ -1,0 +1,115 @@
+
+> flow-architecture@0.1.0 bar
+> node bar/run.mjs
+
+
+1. Changed while in use, nothing lost
+   web app     FAIL
+      no   change appears without a reload
+      no   half-typed text survives getting the change
+      yes  saved tasks survive
+      New version did not appear in the open page (still v1 after 1.5 s). After the reload that brings it: half-typed text lost, saved tasks kept.
+   FLOW today  PASS
+      yes  change appears without a reload
+      yes  text typed before, during and after the swap is all there
+      yes  focus and caret stay in the field, and it is the very same field (not a rebuilt copy)
+      yes  the same holds in 8 of 8 further runs
+      yes  saved tasks survive
+      yes  scroll position survives a swap
+      In Chromium a signed release swapped the running code in 4.2 ms while the person was mid-word. Field reads "Buy milk today", focus kept, tasks kept, scroll kept, in this run and in 8 of 8 more. The page is now drawn by FLOW's own presenter, which patches the page in place and reads typed text from the host, so the app author does nothing to get this. (With that host fix switched off, text was lost in 6 of 10 runs.)
+
+2. Each person's copy is different, and it stays the company's app
+   web app     FAIL
+      yes  a person can change their own copy
+      no   the change survives a company release
+      no   the company declares where changes may go
+      A user script starred 2 tasks on v1. After the company shipped v2 (it renamed one CSS class), it starred 0: the person's change broke silently. The company has no way to say where such changes may go.
+   FLOW today  PASS
+      yes  the company declares where functions may go
+      yes  a person's own function installs there, signed by the person, with no company signature and no restart
+      yes  two people on the same release see different apps
+      yes  one person's function means nothing on another person's device
+      yes  a company update reaches both, and the person's function carries on untouched with its data
+      yes  the company can close the spot (function paused, data kept) and reopen it (function back)
+      yes  the same in a real browser, while the person is typing
+      The company's release opens a spot called "panel" and says what a function there may read and use. Ana's device accepted a function signed by Ana's own key (2 ms, company code not restarted); Ben's device, on the same release, shows the plain app, and refuses Ana's function (untrusted). A company update reached both devices and Ana's function kept running. It stays the company's app: a function for a spot the company didn't open is refused (not_open), and when the company closed the spot the function was paused with its data kept, then came back when the spot reopened. Limit: a person's functions live on the device they were installed on; carrying them to the person's other devices is not built.
+
+3. The device has the last word
+   web app     FAIL
+      no   code the server swapped in is refused
+      The server swapped the script for a hostile one. The browser ran it on the next load and it sent the person's tasks to the server. Nothing on the device checked it.
+   FLOW today  PASS
+      yes  a release signed by the relay's own key is refused
+      yes  a genuine release with a swapped layer file is refused
+      yes  a genuine release with edited contents is refused
+      yes  a new trust list pushed by the relay is refused
+      yes  an old genuine release replayed later is refused
+      yes  the app kept running the last good version throughout
+      yes  the same refusal happens in a real browser
+      Acting as a hostile server we tried five ways to push code or trust: all refused on the device (untrusted, blob, untrusted, untrusted, stale), and the app kept running. Limit: this promise holds for an installed host. When the checker itself is a web page, whoever serves that page can replace the checker.
+
+4. Every change has a named, accountable signer and a working undo
+   web app     FAIL
+      no   the running code names its signer
+      no   a rollback reaches the open app
+      Nothing in the page says who is accountable for the running code. After the company rolled back, the open page kept running v2 (confirmed), and the data v2 rewrote stayed rewritten (confirmed).
+   FLOW today  PASS
+      yes  every accepted change is recorded with the key that signed it
+      yes  a person's change is recorded under the person's name
+      yes  the company can undo a release in the running app, data and typing kept
+      yes  a release that crashes is undone automatically
+      yes  the person can undo their own change on the device: old code and old data back, even after the data's format changed
+      yes  the same undo in a real browser, while the person is typing
+      yes  an AI agent's change is tied to a time-limited grant from a person, who is recorded as accountable
+      yes  the agent's function that fails is paused without harming the app, and the person can undo it
+      yes  after the grant's time limit the agent can change nothing
+      Each accepted change is recorded on the device with the key that signed it, and for a person's or an agent's change, the person who answers for it by name. Undo works three ways: the company undid a release in the open app in 1.6 ms; a crashing release was reverted on its own; and the person undid their own update on the device in 1.2 ms, getting back both the old code and the old data although the update had rewritten the data's format. An agent could install a function only with a grant from Ana (alone: untrusted); when its code failed it was paused and Ana removed it; after ten minutes the grant was dead (expired). Limits: the company's keys are shown as key ids, not names; the record lives in memory and is not yet written to disk.
+
+5. A function can only touch what it declared
+   web app     FAIL
+      no   added code can't read data it didn't declare
+      no   added code can't send personal data off the device
+      The user script declared nothing, read all of the app's stored data, and sent it off the device. The server received it: yes.
+   FLOW today  PASS
+      yes  a function can't read data it didn't declare
+      yes  a function can't write data it doesn't own
+      yes  a function can't use a capability it didn't declare
+      yes  a person's function that would send personal data off the device is refused at install
+      yes  a company add-on that would do the same is refused too
+      yes  a function that sends only public data is allowed
+      yes  where the company allows personal data out, the person must still say yes on the device
+      yes  no personal data reached the network in any of this
+      Access is enforced: a function saw none of the tasks or the secret note it hadn't declared, couldn't overwrite a task, and its undeclared network call was refused. The gap from last time is closed: the release now labels its data and says which capabilities leave the device, and a function that declared both "read tasks" and "network" was refused before any of its code ran (would_leak), while one that sends only public data worked. Limit, stated plainly: the device judges by what a function declares (which data, which capabilities), not by following each value through the code. A function allowed both personal data and a way out is trusted with it, which is why that case needs the company's ceiling and the person's yes.
+
+6. It works with no network
+   web app     FAIL
+      no   a change can arrive without a network
+      With the network off the app could not even load, and there is no way to hand it a new version from a file. (A service worker can cache the current version; it can't accept a new one offline.)
+   FLOW today  PASS
+      yes  the child process has no network (a connection attempt fails)
+      yes  `flow install` applies a keyring change and a release from files alone, then renders
+      yes  a swapped layer file in the bundle is refused
+      yes  without the keyring change in the bundle, the release is refused (untrusted)
+      With the network removed (a connection attempt fails), a new trust list, a release and its code installed from a folder of files and the app rendered. A tampered file and an untrusted release in the folder were refused the same way as online.
+
+7. One function, many surfaces
+   web app     PARTIAL
+      yes  screen
+      yes  read aloud
+      no   usable by an agent through declared actions
+      The browser gives a screen and, through its accessibility tree, a screen reader (button "Add" found by role: yes). There is no declared list of actions an AI agent can call; an agent has to guess from the page.
+   FLOW today  PASS
+      yes  screen (browser page, drawn by FLOW's presenter)
+      yes  terminal text
+      yes  read aloud
+      yes  an agent lists the actions and uses one
+      yes  an agent can't do what isn't on screen, or write a field the action doesn't take
+      yes  all four surfaces read one table of element meanings, which is in the spec and ships with the host
+      One unchanged function was shown as a browser page, as terminal text, as a spoken description ("Heading: Tasks. 0 of 1 done. Text field: Add a task…. Button…") and as a list of 2 actions that an agent then used to add a task. The meaning of each element (its role, its name, its state, its action) is now written in the spec and implemented once in the host; the four presenters ship with the host and all read that one table, and an element kind from a newer release still shows its contents on an older host. Limit: the element set is small (text, headings, fields, buttons, switches, groups); lists, images and navigation are not defined yet.
+
+web app: { fail: 6, partial: 1 } 
+FLOW today: { pass: 7 }
+
+real	0m45.802s
+user	0m10.579s
+sys	0m1.574s

@@ -1,0 +1,56 @@
+
+> flow-architecture@0.1.0 test:go
+> cd go && go vet ./... && go test ./... && go run ./cmd/flow-conformance ../conformance
+
+go: downloading go1.25.0 (linux/amd64)
+go: downloading github.com/cloudflare/circl v1.6.5
+go: downloading golang.org/x/crypto v0.54.0
+go: downloading golang.org/x/sys v0.47.0
+?   	github.com/nik190799/flow/go/cmd/flow-conformance	[no test files]
+ok  	github.com/nik190799/flow/go/flow	0.003s
+PASS  capsule-a1/trust-ok
+PASS  capsule-a1/trust-pinned
+PASS  capsule-a1/trust-pin-mismatch
+PASS  capsule-a1/trust-stripped-pq
+PASS  capsule-a1/trust-weak-root
+PASS  capsule-a1/wrapper-reformatted
+PASS  capsule-a1/wrapper-future-format
+PASS  capsule-a1/wrapper-bad-base64
+PASS  capsule-a1/payload-duplicate-key
+PASS  capsule-a1/payload-not-utf8
+PASS  capsule-a1/same-key-twice
+PASS  capsule-a1/kid-mismatch
+PASS  capsule-a1/release-ok
+PASS  capsule-a1/release-stripped-pq
+PASS  capsule-a1/release-stripped-p256
+PASS  capsule-a1/release-wrong-type
+PASS  capsule-a1/release-relabelled
+PASS  capsule-a1/release-wrong-app
+PASS  capsule-a1/release-expired
+PASS  capsule-a1/release-expired-no-clock
+PASS  capsule-a1/release-invented-fields
+PASS  capsule-a1/release-requires-unknown
+PASS  capsule-a1/rotate-new-keys-only
+PASS  capsule-a1/rotate-old-keys-only
+PASS  capsule-a1/rotate-all-roots
+PASS  capsule-a1/rotate-attacker-one-root
+PASS  capsule-a1/retire-release-suite
+PASS  capsule-a1/rotate-unknown-suite
+PASS  capsule-a1/rotate-classical-only
+PASS  capsule-a1/rotate-drops-pq-root
+PASS  capsule-a1/rotate-after-losing-r1
+PASS  capsule-a1/rotate-wrong-app
+PASS  capsule-a1/spare-needed
+PASS  capsule-a1/spare-revealed
+PASS  capsule-a1/spare-not-replaced
+PASS  capsule-a1/spare-forged-pub
+PASS  capsule-a1/spare-impostor
+PASS  capsule-a1/keyring-invented-fields
+PASS  capsule-a1/keyring-requires-unknown
+PASS  capsule-a1/keyring-unknown-role
+
+conformance (go): 40/40 vectors passed
+
+real	0m11.540s
+user	0m23.740s
+sys	0m5.079s

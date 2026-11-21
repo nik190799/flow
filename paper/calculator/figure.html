@@ -1,0 +1,66 @@
+<!doctype html><meta charset="utf-8"><title>FLOW calculator figure</title>
+<script type="importmap">{ "imports": {
+  "live-layer-protocol/": "/node_modules/live-layer-protocol/",
+  "@noble/post-quantum/": "/node_modules/@noble/post-quantum/",
+  "@noble/hashes/": "/node_modules/@noble/hashes/",
+  "@noble/curves/": "/node_modules/@noble/curves/"
+} }</script>
+<style>
+  :root { --bg:#0e1116; --panel:#161b22; --key:#212833; --op:#2a3a52; --ink:#e8edf3; --soft:#8b97a6; --core:#5aa0ff; --own:#38d39f; --agent:#f0b04a; font:15px/1.4 "Inter", system-ui, sans-serif; color:var(--ink); }
+  body { margin:0; background:var(--bg); padding:22px; width:380px; }
+  #app section { background:var(--panel); border-radius:16px; padding:14px 14px 14px; margin-bottom:12px; border:1px solid #232a35; position:relative; }
+  #app section::before { content:attr(data-who); display:block; font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; margin-bottom:8px; font-weight:600; }
+  #app section[data-kind=core] { border-left:3px solid var(--core); } #app section[data-kind=core]::before { color:var(--core); }
+  #app section[data-kind=own] { border-left:3px solid var(--own); } #app section[data-kind=own]::before { color:var(--own); }
+  #app section[data-kind=agent] { border-left:3px solid var(--agent); } #app section[data-kind=agent]::before { color:var(--agent); }
+  #app [data-layout=col], #app [data-layout=card] { display:flex; flex-direction:column; gap:6px; }
+  #app [data-layout=row] { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+  #app p { margin:0; color:var(--soft); font-size:13.5px; }
+  #app p[data-strong="1"] { color:var(--ink); font-size:34px; font-weight:300; text-align:right; font-variant-numeric:tabular-nums; padding:4px 6px 0; }
+  #app button { font:inherit; font-size:16px; padding:10px 0; border:0; border-radius:10px; background:var(--key); color:var(--ink); }
+  #app [data-act=div], #app [data-act=mul], #app [data-act=sub], #app [data-act=add], #app [data-act=eq] { background:var(--op); }
+  #app [data-act=sin], #app [data-act=cos], #app [data-act=sqrt], #app [data-act=pct] { background:#1b2230; color:#a9c7ff; font-size:14px; }
+  #app section:not([data-kind=core]) button { font-size:13.5px; padding:8px 12px; background:#202a26; }
+  #app section[data-kind=agent] button { background:#2d2618; }
+  #app input { padding:8px 10px; border-radius:9px; border:1px solid #2d3542; background:#0f141a; color:var(--ink); font:inherit; font-size:13.5px; }
+  #app [role=switch] { text-align:left; padding-left:12px !important; } #app [role=switch]::before { content:"○  "; } #app [role=switch][aria-checked=true]::before { content:"●  "; color:var(--agent); }
+</style>
+<body><div id="app"></div>
+<script type="module">
+import { FlowHost } from "/src/host.js";
+import { present } from "/src/present/dom.js";
+import { generateKey } from "/src/suites.js";
+import { keyringDoc, sealKeyring, sealRelease, sealFunction, sealGrant } from "/src/author.js";
+import { sha256hex } from "/src/bytes.js";
+const app = "example.calculator", blobs = new Map();
+const load = async (f) => { const b = new Uint8Array(await (await fetch("/paper/calculator/" + f + ".wasm")).arrayBuffer()); const h = sha256hex(b); blobs.set(h, b); return h; };
+const [v1, v2, deg, split] = await Promise.all(["pad_v1", "pad_v2", "deg", "split"].map(load));
+const [root, rel, ana, agent] = await Promise.all([1, 2, 3, 4].map(() => generateKey("p256")));
+const [q, spare] = await Promise.all([generateKey("slh-dsa-sha2-128s"), generateKey("slh-dsa-sha2-128s")]);
+const keyring = await sealKeyring(keyringDoc({ keyring: 1, app, spare, roles: { root: [{ keys: [root] }, { keys: [q] }], release: [{ keys: [rel] }] } }), [root, q]);
+const release = (version, layer) => sealRelease({ app, manifest: { app, version, layers: { pad: layer }, order: ["pad"], keys: { pad: { own: ["calc."] } }, caps: { pad: [] } },
+  data: { "calc.": "personal" }, capabilities: {}, core: ["pad"], directions: { fx: { read: ["calc."], caps: [], egress: "none", max: 8, after: "pad" } } }, [rel]);
+const host = await FlowHost.create({ keyring });
+const root$ = document.getElementById("app");
+const draw = present(host, root$);
+const label = () => { const secs = root$.querySelectorAll("section"); const slots = (host.tree ?? []).filter((s) => s.tree).map((s) => s.slot);
+  slots.forEach((s, i) => { const el = secs[i]; if (!el) return;
+    if (s === "pad") { el.dataset.kind = "core"; el.dataset.who = `Company core · release ${host.version}`; }
+    else if (s === "fn.fx.deg") { el.dataset.kind = "own"; el.dataset.who = "Ana's function · signed by Ana"; }
+    else { el.dataset.kind = "agent"; el.dataset.who = "Agent's function · under Ana's grant"; } }); };
+host.onRender = (t) => { draw(t); label(); };
+const fb = async (h) => blobs.get(h);
+const press = async (...ids) => { for (const id of ids) await host.dispatch("pad", id); label(); };
+window.step = {
+  async one() { await host.apply(await release(1, v1), fb); await press("d3", "d0"); },
+  async two() {
+    host.enrolPerson({ ...ana, name: "Ana" });
+    await host.installFunction(await sealFunction({ app, direction: "fx", id: "deg", seq: 1, layer: deg, reads: ["calc."] }, ana), fb);
+    const grant = await sealGrant({ app, agent, directions: ["fx"], notAfter: Date.now() + 600e3 }, ana);
+    await host.installFunction(await sealFunction({ app, direction: "fx", id: "split", seq: 1, layer: split, reads: ["calc."] }, agent, grant), fb);
+    await host.act("fn.fx.split", "go", { "fn/fx/split/n": "3" }); await host.act("fn.fx.split", "tip"); label();
+  },
+  async three() { await host.apply(await release(2, v2), fb); await press("clr", "d1", "d4", "d4", "sqrt"); },
+};
+window.__ready = true;
+</script>
