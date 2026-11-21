@@ -1,0 +1,4 @@
+p256: sign p50 0.25 ms (n=200), verify p50 0.20 ms (n=200), sig 64 B, pub 65 B
+slh-dsa-sha2-128s: sign p50 1210.45 ms (n=7), verify p50 1.51 ms (n=30), sig 7856 B, pub 32 B
+envelope with one p256 + one slh-dsa signature: 10817 B as JSON
+node v22.23.5, 4 cpus, Intel(R) Xeon(R) Processor @ 2.30GHz

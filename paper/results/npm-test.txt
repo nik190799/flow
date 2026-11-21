@@ -1,0 +1,210 @@
+
+> flow-architecture@0.1.0 test
+> node test/unit.mjs && node test/wasm1.mjs && node test/proofs.mjs && node test/host.mjs && node test/functions.mjs && node test/present.mjs && node test/offline.mjs && node conformance/run-js.mjs
+
+PASS  U1 a keyring signed under its own root policy (P-256 2-of-3 and SLH-DSA 1-of-2) is trusted
+PASS  U2 an SLH-DSA-SHA2-128s signature is 7,856 bytes
+PASS  U3 the same envelope with reordered, re-indented and extra wrapper fields still verifies
+PASS  U4 a keyring presented where a release is expected is refused as wrong_type
+PASS  U5 relabelling an envelope's type breaks its signatures (refused, untrusted)
+PASS  U6 one changed payload byte breaks the signatures
+PASS  U7 one key signing twice counts once (P-256 threshold 2 not met)
+PASS  U8 a payload repeating a key in one object is refused
+PASS  U9 the same key name in different objects is fine
+PASS  U10 a payload that isn't UTF-8 is refused
+PASS  U11 non-canonical base64url is refused
+PASS  U12 a keyring whose kid doesn't match its public key is refused
+PASS  U13 a keyring without a spare root key is refused
+PASS  U14 the spare must not also be an active key
+PASS  U15 a keyring whose root has no quantum-safe group is refused (weak_root), even as the first keyring
+PASS  U16 a threshold above the group size is refused
+PASS  U17 a pinned first keyring with the wrong hash is refused
+PASS  U18 kid is sha256 over suite, a zero byte and the public key
+PASS  U19 a release signed by the release key verifies
+PASS  U20 a release signed by a root key but not the release key is refused
+PASS  U21 a release for another app is refused
+PASS  U22 an expired release is refused on a device with a trusted clock
+PASS  U23 the same release is judged only by signatures on a device with no trusted clock
+PASS  U24 a newer envelope format is reported as host_too_old, not malformed
+PASS  U25 revision A1 defines no required features
+PASS  U26 signatures can be added later by another party (cosign)
+
+unit: 26/26 passed
+PASS  W plain 1.0 module: accepted, and wabt agrees
+PASS  W sign extension: refused, and wabt agrees  — uses sign extension (i32.extend8_s), which is beyond WebAssembly 1.0
+PASS  W non-trapping float-to-int: refused, and wabt agrees  — uses bulk memory or non-trapping float-to-int (0xFC prefix), which is beyond WebAssembly 1.0
+PASS  W bulk memory: refused, and wabt agrees  — uses bulk memory or non-trapping float-to-int (0xFC prefix), which is beyond WebAssembly 1.0
+PASS  W passive data segment: refused, and wabt agrees  — uses bulk memory (passive or explicit-index data segment), which is beyond WebAssembly 1.0
+PASS  W mutable global export: refused (wabt 1.0.37 does not enforce this feature switch)  — uses mutable global export, which is beyond WebAssembly 1.0
+PASS  W mutable global import: refused (wabt 1.0.37 does not enforce this feature switch)  — uses mutable global import, which is beyond WebAssembly 1.0
+PASS  W multi-value result: refused (wabt 1.0.37 does not enforce this feature switch)  — uses multi-value (function with more than one result), which is beyond WebAssembly 1.0
+PASS  W multi-value block: refused, and wabt agrees  — uses multi-value (block with a type index), which is beyond WebAssembly 1.0
+PASS  W reference types (externref param): refused, and wabt agrees  — uses reference types (non-number value type), which is beyond WebAssembly 1.0
+PASS  W reference types (two tables): refused (wabt 1.0.37 does not enforce this feature switch)  — uses reference types (more than one table), which is beyond WebAssembly 1.0
+PASS  W SIMD: refused, and wabt agrees  — uses SIMD (v128 type), which is beyond WebAssembly 1.0
+PASS  W threads (shared memory): refused, and wabt agrees  — uses threads (shared memory), which is beyond WebAssembly 1.0
+PASS  W tail call: refused, and wabt agrees  — uses tail calls (return_call), which is beyond WebAssembly 1.0
+PASS  W immutable global export (allowed): accepted, and wabt agrees
+PASS  W every LLP and FLOW layer (34) gets the same verdict as wabt
+PASS  W FLOW's own test layers are WebAssembly 1.0
+PASS  W junk bytes are refused
+
+wasm1: 18/18 passed
+Proof 1: downgrade
+PASS  P1.1 a release carrying both required signatures is accepted
+PASS  P1.2 the same release with the quantum-safe signature stripped off is refused
+PASS  P1.3 the same release with the P-256 signature stripped off is refused
+PASS  P1.4 a keyring with its root SLH-DSA signature stripped is refused
+PASS  P1.5 a policy change signed only by the new keys (no old-policy signatures) is refused
+PASS  P1.6 a policy change signed by the old policy only (new keys didn't sign) is refused
+PASS  P1.7 replacing every root key (both suites) is accepted when signed under both the old and new policy
+PASS  P1.8 replaying the accepted keyring is refused as stale
+PASS  P1.9 an attacker holding one P-256 root key can't add their own release key
+PASS  P1.10 the root can deliberately replace the release suites (two groups to one new key)
+PASS  P1.11 after that, the old release keys no longer work
+PASS  P1.12 a keyring needing a suite this host lacks reports host_too_old
+
+Proof 2: root
+PASS  P2.1 a device at keyring 1 refuses keyring 2 signed with classical root keys only
+PASS  P2.2 a keyring 2 that drops the quantum-safe root group is refused even when fully signed
+PASS  P2.3 lose one P-256 root key (r1): r2 and r3 rotate to a keyring that replaces it with r4
+PASS  P2.4 with q2 lost and a 2-of-2 SLH-DSA root, rotation without the spare is refused
+PASS  P2.5 revealing the spare (signature + public key) stands in for the lost key and rotation works
+PASS  P2.6 after revealing the spare, the next keyring must commit to a new spare
+PASS  P2.7 a revealed spare whose public key doesn't match the committed kid is ignored (refused)
+PASS  P2.8 an uncommitted key presenting itself as the spare is refused
+
+Proof 3: time capsule
+PASS  P3.1 a keyring with invented fields (payload, wrapper, signature entries, a sensitivity label) is accepted
+PASS  P3.2 a release with invented fields is accepted
+PASS  P3.3 a release that requires a feature this host lacks reports host_too_old
+PASS  P3.4 a keyring that requires a feature this host lacks reports host_too_old
+PASS  P3.5 the A1 capsule vectors are unchanged since they were frozen  — 40 files
+
+proofs: 25/25 passed
+PASS  H1 a FLOW release runs on the unchanged LLP host  — Tasks 0 of 0 done  Add
+PASS  H1b the result and the device's ledger name the key that signed the release
+PASS  H2 the app works: a task is added through the layer
+PASS  H3 a FLOW release swaps the layer live and keeps state  — 9.3 ms
+PASS  H4 a release signed by a key outside the keyring never reaches LLP; v2 keeps running
+PASS  H5 a layer built with post-1.0 WebAssembly features (bulk memory) is refused as not_wasm_1  — layer 13b11cec uses bulk memory (data count section), which is beyond WebAssembly 1.0
+PASS  H6 an expired release is refused on a device with a trusted clock
+PASS  H7 the device moves to keyring 2
+PASS  H8 the retired release key is refused after rotation
+PASS  H9 the new release key is accepted, and LLP rolls back to v1 code with state intact
+PASS  H10 LLP's own replay protection still applies behind FLOW (older version refused)
+PASS  H11 clock: untrusted ignores expiry and LLP's 'too far ahead of now' check; wasm: any allows post-1.0 layers
+PASS  H12 with a trusted clock, LLP still refuses a version years ahead of now  — version 1924992000000 is too far ahead (limit 1826769826958); it would block every later release
+
+host: 13/13 passed
+PASS  F1 before any release runs, a function is refused
+PASS  F2 a function signed by a key that isn't enrolled on the device is refused  — this function isn't signed by a person enrolled on this device
+PASS  F3 the person's own function installs in the direction the company opened, with no company signature  — 2.7 ms
+PASS  F4 the company's app wasn't restarted or changed by it
+PASS  F5 it appears where the direction says: right after the main slot
+PASS  F6 it keeps its own data under its own keys
+PASS  F7 the device's record names the person, the signing key and the stated intent
+PASS  F8 a function for a direction the company didn't open is refused
+PASS  F9 a function asking for data its direction doesn't offer is refused  — panel doesn't offer "vault."
+PASS  F10 a function asking for a capability its direction doesn't offer is refused
+PASS  F11 a function's code is checked like any layer (hash, WebAssembly 1.0)  — not_wasm_1
+PASS  F12 a function signed for another app is refused
+PASS  F13 a function that reads personal data and declares a capability that leaves the device is refused before it runs  — it reads personal data and uses net, which leaves the device; panel allows only public data to leave
+PASS  F14 a function that reads only public data may send it out
+PASS  F15 the direction's limit on how many functions it holds is enforced
+PASS  F16 the same code installed without the net capability can't send: the call is refused at run time
+PASS  F17 a company release with a non-core slot that reads personal data and can send it out is refused  — slot helper can read personal data and use net, which leaves the device; name it in core if that is the company's own code
+PASS  F18 a release can't offer secret data to functions
+PASS  F19 a release can't claim the keys kept for people's functions
+PASS  F20 a company release swaps only the company's code; the function keeps running untouched, data intact
+PASS  F21 replay protection covers the company's own version numbers
+PASS  F22 an update must carry a higher seq
+PASS  F23 another person on the device can't replace Ana's function
+PASS  F24 the update runs and changed the form of the function's data (schema 2)
+PASS  F25 the person undoes it on the device: old code AND old data are back, across the data-format change  — 1.1 ms
+PASS  F26 the undone function works
+PASS  F27 the undo didn't touch the company's app or data
+PASS  F28 the undone version can't be pushed back by replaying its document
+PASS  F29 the record shows the undo under the person's name
+PASS  F30 an agent's key alone means nothing to the device
+PASS  F31 with a grant from Ana, the agent's function installs; the record names the agent's key, Ana as accountable, and the grant
+PASS  F32 the agent can't use a capability the grant didn't pass on  — the function asks for a capability its grant doesn't pass on
+PASS  F33 someone else can't borrow the grant
+PASS  F34 a grant signed by someone who isn't enrolled is refused
+PASS  F35 after its time limit the grant no longer works  — the grant expired at 2026-11-20T00:10:00.000Z
+PASS  F36 the person can end a grant early on the device
+PASS  F37 a function whose code fails is paused; the app and the other function carry on; its failed write is dropped
+PASS  F38 the person undoes the agent's change; nothing of it is left
+PASS  F39 when a release stops offering what a function reads, the release still lands and the function is paused, data kept
+PASS  F40 when a later release offers it again, the function comes back with its data
+PASS  F41 the company can close a direction: functions there are paused, not deleted
+PASS  F42 a function's text field can't write a key the function doesn't own
+PASS  F43 and a presenter doesn't show it a key the function can't read
+PASS  F44 where the company allows personal data out, the function still needs the person's yes on the device  — it reads personal data and uses net, which leaves the device; the person must agree to that on the device first
+PASS  F45 with that yes it installs and can send
+PASS  F46 when the company lowers the ceiling again, that function is paused at once
+PASS  F47 removing a function removes its code and everything it stored
+PASS  F48 inspect() says what runs and under whose name
+PASS  F49 forgetting a person removes their functions and those functions' data
+PASS  F50 a device that can't tell the time doesn't accept grants (their point is the time limit)  — this device has no trusted clock, so it can't check a grant's time limit; the person must sign directly
+PASS  F51 but the person can still sign directly
+
+functions: 51/51 passed
+PASS  E1 every kind has the role the spec gives it  — heading,heading,text,text,textbox,button,switch,text
+PASS  E2 heading level comes from the level attribute and defaults to 1; a bad level is 1
+PASS  E3 a text field's name is its placeholder, its value key is bind, and submit names an action
+PASS  E4 a switch is on only when on is "1"
+PASS  E5 a kind this host doesn't know is a group: its contents still show
+PASS  E6 terminal text  — "== Jobs ==\n=== Today ===\n2 open\n7\n<Roof fan>\n[ Add ]\n[x] Boiler\ninside a kind from the future"
+PASS  E7 speech  — Heading: Jobs. Heading level 2: Today. 2 open. 7. Text field: Add a job. Button: Add. Switch, on: Boiler. inside a kind from the future.
+PASS  E8 agent tools are the buttons and switches; a field that submits to a button is its input
+
+present: 8/8 passed
+PASS  O1 the child process has no network (a connection attempt fails)  — ENETUNREACH
+PASS  O2 `flow install` applies a keyring change and a release from files alone, then renders  — Tasks 0 of 0 done  Add
+PASS  O3 a swapped layer file in the bundle is refused  — blob bc5bb3b9 failed integrity check
+PASS  O4 without the keyring change in the bundle, the release is refused (untrusted)
+
+offline: 4/4 passed
+PASS  capsule-a1/trust-ok
+PASS  capsule-a1/trust-pinned
+PASS  capsule-a1/trust-pin-mismatch
+PASS  capsule-a1/trust-stripped-pq
+PASS  capsule-a1/trust-weak-root
+PASS  capsule-a1/wrapper-reformatted
+PASS  capsule-a1/wrapper-future-format
+PASS  capsule-a1/wrapper-bad-base64
+PASS  capsule-a1/payload-duplicate-key
+PASS  capsule-a1/payload-not-utf8
+PASS  capsule-a1/same-key-twice
+PASS  capsule-a1/kid-mismatch
+PASS  capsule-a1/release-ok
+PASS  capsule-a1/release-stripped-pq
+PASS  capsule-a1/release-stripped-p256
+PASS  capsule-a1/release-wrong-type
+PASS  capsule-a1/release-relabelled
+PASS  capsule-a1/release-wrong-app
+PASS  capsule-a1/release-expired
+PASS  capsule-a1/release-expired-no-clock
+PASS  capsule-a1/release-invented-fields
+PASS  capsule-a1/release-requires-unknown
+PASS  capsule-a1/rotate-new-keys-only
+PASS  capsule-a1/rotate-old-keys-only
+PASS  capsule-a1/rotate-all-roots
+PASS  capsule-a1/rotate-attacker-one-root
+PASS  capsule-a1/retire-release-suite
+PASS  capsule-a1/rotate-unknown-suite
+PASS  capsule-a1/rotate-classical-only
+PASS  capsule-a1/rotate-drops-pq-root
+PASS  capsule-a1/rotate-after-losing-r1
+PASS  capsule-a1/rotate-wrong-app
+PASS  capsule-a1/spare-needed
+PASS  capsule-a1/spare-revealed
+PASS  capsule-a1/spare-not-replaced
+PASS  capsule-a1/spare-forged-pub
+PASS  capsule-a1/spare-impostor
+PASS  capsule-a1/keyring-invented-fields
+PASS  capsule-a1/keyring-requires-unknown
+PASS  capsule-a1/keyring-unknown-role
+
+conformance (js): 40/40 vectors passed
