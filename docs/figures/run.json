@@ -1,0 +1,56 @@
+{
+  "steps": [
+    {
+      "name": "release-1",
+      "ok": true,
+      "code": null,
+      "reason": null,
+      "ms": 50.9
+    },
+    {
+      "name": "ana-checklist",
+      "ok": true,
+      "code": null,
+      "reason": null,
+      "ms": 7.5
+    },
+    {
+      "name": "agent-next-up",
+      "ok": true,
+      "code": null,
+      "reason": null,
+      "ms": 29.7
+    },
+    {
+      "name": "ana-export",
+      "ok": false,
+      "code": "would_leak",
+      "reason": "it reads personal data and uses upload, which leaves the device; side allows only public data to leave",
+      "ms": 1.6
+    },
+    {
+      "name": "release-2",
+      "ok": true,
+      "code": null,
+      "reason": null,
+      "ms": 5.7
+    },
+    {
+      "name": "ana-checklist-v2",
+      "ok": true,
+      "code": null,
+      "reason": null,
+      "ms": 4.7
+    },
+    {
+      "name": "ana-undo",
+      "ok": true,
+      "code": null,
+      "reason": null,
+      "ms": 3
+    }
+  ],
+  "coreUntouchedByFunction": true,
+  "leakCodeNeverFetched": true,
+  "functionKeptAcrossRelease": true
+}
