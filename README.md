@@ -3,9 +3,12 @@
 **F**unctions as **L**ive **O**verlays, **W**ithout restart.
 
 [![test](https://github.com/nik190799/flow/actions/workflows/test.yml/badge.svg)](https://github.com/nik190799/flow/actions/workflows/test.yml)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24411135.svg)](https://doi.org/10.5281/zenodo.24411135)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
 FLOW is an architecture for apps that change while they run. The company ships its app as signed code. The people using it, or AI agents working for them, add their own signed functions in the spots the company opened. Every change is checked on the device before any of it runs, nothing restarts, and every change can be undone.
+
+**Paper:** [FLOW: Functions as Live Overlays, Without Restart](https://doi.org/10.5281/zenodo.24411135) (doi:10.5281/zenodo.24411135). Source, raw results and benchmark scripts are in [`paper/`](paper/).
 
 FLOW sits on top of the [Live Layer Protocol](https://github.com/nik190799/live-layer-protocol) (LLP). LLP moves signed WebAssembly layers into a running app and swaps them without losing state. FLOW decides **who may change what**. It uses LLP as a library and doesn't fork or change it.
 
@@ -218,13 +221,27 @@ Each line's limits are printed with its result. The main ones: line 3 holds for 
 | `test/` | The test suites behind `npm test` |
 | `examples/workorders/` | The reference app: a field-service work-order app with one open direction |
 | `bar/` | The seven-line bar, run against an ordinary web app and against FLOW |
+| `paper/` | The FLOW paper (LaTeX source, PDF), its benchmark scripts and raw results |
 | `docs/` | The two animated diagrams and `docs/figures/`, which draws them from a real run |
 | `layers/` | Small WebAssembly test layers and their sources |
 | `bin/flow.mjs` | The `flow` command line |
 
 ## Citation
 
-See [CITATION.cff](CITATION.cff). FLOW builds on the Live Layer Protocol paper, [doi:10.5281/zenodo.24349382](https://doi.org/10.5281/zenodo.24349382).
+The paper is in [`paper/`](paper/) and on Zenodo: [doi:10.5281/zenodo.24411135](https://doi.org/10.5281/zenodo.24411135). See also [CITATION.cff](CITATION.cff).
+
+```bibtex
+@misc{kadalge2026flow,
+  author    = {Kadalge, Nikhil Ajay},
+  title     = {{FLOW}: Functions as Live Overlays, Without Restart. An Architecture for Applications That People and Their Agents Change While They Run},
+  year      = {2026},
+  publisher = {Zenodo},
+  doi       = {10.5281/zenodo.24411135},
+  url       = {https://doi.org/10.5281/zenodo.24411135}
+}
+```
+
+FLOW builds on the Live Layer Protocol paper, [doi:10.5281/zenodo.24349382](https://doi.org/10.5281/zenodo.24349382).
 
 ## License
 

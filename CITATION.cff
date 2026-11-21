@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-message: "If you use FLOW, please cite it as below."
+message: "If you use FLOW, please cite the paper below."
 title: "FLOW: Functions as Live Overlays, Without restart"
 type: software
 authors:
@@ -7,6 +7,7 @@ authors:
     given-names: Nikhil Ajay
     orcid: "https://orcid.org/0009-0004-8859-5607"
 license: Apache-2.0
+doi: "10.5281/zenodo.24411135"
 repository-code: "https://github.com/nik190799/flow"
 keywords:
   - live update
@@ -14,6 +15,18 @@ keywords:
   - code signing
   - end-user programming
   - software architecture
+preferred-citation:
+  type: article
+  title: "FLOW: Functions as Live Overlays, Without Restart. An Architecture for Applications That People and Their Agents Change While They Run"
+  authors:
+    - family-names: Kadalge
+      given-names: Nikhil Ajay
+      orcid: "https://orcid.org/0009-0004-8859-5607"
+  year: 2026
+  publisher:
+    name: Zenodo
+  doi: "10.5281/zenodo.24411135"
+  url: "https://doi.org/10.5281/zenodo.24411135"
 references:
   - type: article
     title: "Live Layer Protocol: Streaming Signed, Verified WebAssembly Layers into Running Applications"
