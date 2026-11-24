@@ -4,6 +4,7 @@
   "description": "FLOW (Functions as Live Overlays, Without restart): an architecture on top of the Live Layer Protocol for apps that change while they run. The company's signed core, people's own signed functions in the spots the company opens, checked and undone on the device.",
   "type": "module",
   "private": true,
+  "author": "Nikhil Ajay Kadalge",
   "license": "Apache-2.0",
   "engines": { "node": ">=22" },
   "bin": { "flow": "bin/flow.mjs" },
